@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root { color-scheme: light dark; }
+/* colored card variants */
+.card-blue  { @apply bg-gradient-to-br from-blue-50 to-white border border-blue-100; }
+.card-pink  { @apply bg-gradient-to-br from-pink-50 to-white border border-pink-100; }
+.card-green { @apply bg-gradient-to-br from-emerald-50 to-white border border-emerald-100; }
+.card-amber { @apply bg-gradient-to-br from-amber-50 to-white border border-amber-100; }
+
+/* ===== App Theme (neutral, SaaS) ===== */
+:root {
+  --bg:        #f7f8fb;
+  --surface:   #ffffff;
+  --card:      #ffffff;
+  --text:      #0f172a;   /* slate-900 */
+  --muted:     #64748b;   /* slate-500 */
+  --border:    #e5e7eb;   /* gray-200 */
+  --ring:      #c7d2fe;   /* indigo-200 */
+  --accent:    #2563eb;   /* indigo-600 (brand accent) */
+  --accent-50: #eff6ff;   /* indigo-50  */
+  --shadow:    0 8px 30px rgba(2, 6, 23, .06);
+}
+
+/* optional dark mode */
+.theme-dark {
+  --bg:        #0b1220;
+  --surface:   #0f1629;
+  --card:      #121a31;
+  --text:      #e5e7eb;
+  --muted:     #94a3b8;
+  --border:    #1e293b;
+  --ring:      #334155;
+  --accent:    #7aa2ff;
+  --accent-50: #0b1530;
+  --shadow:    0 10px 40px rgba(0,0,0,.35);
+}
+
+/* helper utilities */
+.app-bg     { background: var(--bg); }
+.app-card   { background: var(--card); box-shadow: var(--shadow); }
+.app-border { border-color: var(--border); }
+.app-text   { color: var(--text); }
+.app-muted  { color: var(--muted); }
+.app-ring   { box-shadow: 0 0 0 4px var(--ring); }
+.app-accent { color: var(--accent); }
