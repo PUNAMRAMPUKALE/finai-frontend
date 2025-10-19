@@ -1,29 +1,39 @@
 import * as React from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { API } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-
+import { API } from '@/lib/api/api'
+import type { GraphSyncResponse, CypherResponse } from '@/lib/types'
 
 export default function GraphPage() {
-const [q, setQ] = React.useState('MATCH (s:Entity)-[r]->(o:Entity) RETURN s.name AS s, type(r) AS rel, o.name AS o LIMIT 10')
-const sync = useMutation({ mutationFn: () => API.graphSync(100) })
-const query = useMutation({ mutationFn: () => API.graphQuery(q) })
+  const [query, setQuery] = React.useState('MATCH (n)-[r]->(m) RETURN n,r,m LIMIT 10')
+  const [rows, setRows] = React.useState<CypherResponse['rows']>([])
+  const [msg, setMsg] = React.useState<string | null>(null)
 
+  const sync = async () => {
+    const r = await API.graphSync<GraphSyncResponse>()
+    setMsg(`Inserted ${r.inserted} triples`)
+  }
+  const run = async () => {
+    const r = await API.graphQuery<CypherResponse>({ query })
+    setRows(r.rows || [])
+  }
 
-return (
-<div className="space-y-4">
-<h2 className="text-xl font-semibold">Knowledge Graph</h2>
-<div className="flex gap-2">
-<Button onClick={()=>sync.mutate()} disabled={sync.isPending}>{sync.isPending ? 'Syncing…' : 'Sync from Docs'}</Button>
-{sync.isSuccess && <p className="text-sm text-green-600">Inserted: {(sync.data as any).inserted}</p>}
-</div>
-<Textarea value={q} onChange={e=>setQ(e.target.value)} />
-<Button onClick={()=>query.mutate()} disabled={query.isPending}>{query.isPending ? 'Querying…' : 'Run Cypher'}</Button>
-{query.isSuccess && (
-<pre className="rounded-2xl bg-zinc-900 p-4 text-xs text-zinc-50 overflow-auto">{JSON.stringify(query.data, null, 2)}</pre>
-)}
-{query.isError && <p className="text-sm text-red-600">{(query.error as Error).message}</p>}
-</div>
-)
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Button onClick={sync}>Build KG from Docs</Button>
+        {msg && <div className="text-sm text-zinc-600">{msg}</div>}
+      </div>
+      <div className="space-y-2">
+        <Textarea value={query} onChange={e=>setQuery(e.target.value)} rows={6} />
+        <Button onClick={run}>Run Cypher</Button>
+      </div>
+      {!!rows.length && (
+        <div className="rounded-2xl border app-border app-card p-4">
+          <div className="text-sm font-semibold mb-2">Rows</div>
+          <pre className="text-xs overflow-auto">{JSON.stringify(rows, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  )
 }

@@ -10,4 +10,17 @@ export default defineConfig({
     },
   },
   optimizeDeps: { include: ['pdfjs-dist'] },
+  server: {
+  port: 5173,
+   proxy: {
+      // anything starting with /api goes to FastAPI
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        // no rewrite needed because your backend already serves at /api/...
+        // rewrite: (p) => p,   // (keep default)
+      },
+    },
+}
+
 })

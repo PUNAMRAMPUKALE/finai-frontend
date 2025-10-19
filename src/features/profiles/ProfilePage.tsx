@@ -1,50 +1,41 @@
 import * as React from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { API } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-
+import { API } from '@/lib/api/api'
+import type { UpsertProfileResponse } from '@/lib/types'
 
 export default function ProfilePage() {
-const [profile_id, setId] = React.useState('u1')
-const [goal, setGoal] = React.useState('retirement')
-const [risk, setRisk] = React.useState('moderate')
-const [horizon_years, setHorizon] = React.useState(10)
-const [preferences, setPrefs] = React.useState('low fee, global')
-const [constraints, setCons] = React.useState('no tobacco')
+  const [profile_id, setId] = React.useState('u1')
+  const [goal, setGoal] = React.useState('retirement')
+  const [risk, setRisk] = React.useState('moderate')
+  const [horizon_years, setHorizon] = React.useState(10)
+  const [preferences, setPrefs] = React.useState('low fee, global')
+  const [constraints, setCons] = React.useState('no tobacco')
 
+  const [msg, setMsg] = React.useState<string | null>(null)
 
-const m = useMutation({
-mutationFn: () => API.profileUpsert({
-profile_id,
-goal,
-risk,
-horizon_years,
-preferences: preferences.split(',').map(s=>s.trim()).filter(Boolean),
-constraints: constraints.split(',').map(s=>s.trim()).filter(Boolean)
-})
-})
+  const save = async () => {
+    const res = await API.upsertProfile<UpsertProfileResponse>({
+      profile_id, goal, risk, horizon_years,
+      preferences: preferences.split(',').map(s=>s.trim()).filter(Boolean),
+      constraints: constraints.split(',').map(s=>s.trim()).filter(Boolean),
+    })
+    setMsg(`Saved: ${res.profile_id}`)
+  }
 
-
-return (
-<div className="grid gap-4 max-w-xl">
-<h2 className="text-xl font-semibold">Create/Update Profile</h2>
-<Label>Profile ID</Label>
-<Input value={profile_id} onChange={e=>setId(e.target.value)} />
-<Label>Goal</Label>
-<Input value={goal} onChange={e=>setGoal(e.target.value)} />
-<Label>Risk</Label>
-<Input value={risk} onChange={e=>setRisk(e.target.value)} />
-<Label>Horizon (years)</Label>
-<Input type="number" value={horizon_years} onChange={e=>setHorizon(Number(e.target.value))} />
-<Label>Preferences</Label>
-<Input value={preferences} onChange={e=>setPrefs(e.target.value)} />
-<Label>Constraints</Label>
-<Input value={constraints} onChange={e=>setCons(e.target.value)} />
-<Button onClick={()=>m.mutate()} disabled={m.isPending}>{m.isPending ? 'Saving…' : 'Save'}</Button>
-{m.isSuccess && <p className="text-sm text-green-600">Saved.</p>}
-{m.isError && <p className="text-sm text-red-600">{(m.error as Error).message}</p>}
-</div>
-)
+  return (
+    <div className="space-y-4 max-w-xl">
+      <div className="grid grid-cols-2 gap-4">
+        <div><Label>ID</Label><Input value={profile_id} onChange={e=>setId(e.target.value)} /></div>
+        <div><Label>Goal</Label><Input value={goal} onChange={e=>setGoal(e.target.value)} /></div>
+        <div><Label>Risk</Label><Input value={risk} onChange={e=>setRisk(e.target.value)} /></div>
+        <div><Label>Horizon</Label><Input type="number" value={horizon_years} onChange={e=>setHorizon(Number(e.target.value))} /></div>
+        <div className="col-span-2"><Label>Preferences</Label><Input value={preferences} onChange={e=>setPrefs(e.target.value)} /></div>
+        <div className="col-span-2"><Label>Constraints</Label><Input value={constraints} onChange={e=>setCons(e.target.value)} /></div>
+      </div>
+      <Button onClick={save}>Save Profile</Button>
+      {msg && <div className="text-sm text-green-700">{msg}</div>}
+    </div>
+  )
 }

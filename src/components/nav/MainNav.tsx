@@ -6,7 +6,6 @@ const items = [
 { to: '/', label: 'Home' },
 { to: '/ingest', label: 'Ingest' },
 { to: '/insights', label: 'Insights' },
-{ to: '/recommend', label: 'Recommend' },
 { to: '/profiles', label: 'Profiles' },
 { to: '/graph', label: 'Graph' },
 { to: '/crew', label: 'Crew' }
