@@ -1,13 +1,19 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-return <div className={cn('rounded-2xl bg-white shadow-card border border-zinc-100', className)} {...props} />
-}
-export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-return <div className={cn('p-4 border-b border-zinc-100', className)} {...props} />
-}
-export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-return <div className={cn('p-4', className)} {...props} />
+export function Card({
+  className, children, hover = true,
+}: { className?: string; children: React.ReactNode; hover?: boolean }) {
+  return (
+    <div
+      className={cn(
+        'app-card border app-border rounded-2xl shadow-card transition-all',
+        hover && 'hover:shadow-glow hover:-translate-y-[1px]',
+        'card-shine', // fancy sheen
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
 }
