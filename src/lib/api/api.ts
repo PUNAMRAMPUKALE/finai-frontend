@@ -73,8 +73,26 @@ export const API = {
   // --- Startup pitch upload (matches backend: /api/v1/match/pitch) ---
 recommendPitchFile: async <T>(fd: FormData): Promise<T> => {
   const url = `${BASE}/v1/match/pitch`;
-  const res = await fetch(url, { method: "POST", body: fd, headers: authHeaderObj() });
-  if (!res.ok) throw new Error(await res.text().catch(() => res.statusText));
+  let res: Response;
+  try {
+    res = await fetch(url, { method: "POST", body: fd, headers: authHeaderObj() });
+  } catch (e) {
+    // Network errors (wrong BASE / proxy missing) land here
+    throw new Error("Network error: could not reach API. Check VITE_API_BASE or Vite proxy.");
+  }
+  if (!res.ok) {
+    const txt = await res.text().catch(() => res.statusText);
+    throw new Error(txt || `HTTP ${res.status}`);
+  }
   return res.json() as Promise<T>;
 },
+
+getInvestor: <T = any>(name: string): Promise<T> =>
+    http<T>(`/v1/investors/${encodeURIComponent(name)}`, { method: "GET" }),
+
+  analyzeInvestor: <T = any>(body: { name: string; pitch_summary?: string }): Promise<T> =>
+    http<T>("/v1/investors/analyze", { method: "POST", body: JSON.stringify(body) }),
+
+  qaInvestor: <T = any>(body: { name: string; question: string; pitch_summary?: string }): Promise<T> =>
+    http<T>("/v1/investors/qa", { method: "POST", body: JSON.stringify(body) }),
 };

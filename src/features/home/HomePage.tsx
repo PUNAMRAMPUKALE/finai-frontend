@@ -1,10 +1,12 @@
+// src/features/home/HomePage.tsx
 import * as React from 'react'
 
 import StartupPitchSection from '@/features/recommend/StartupPitchSection'
 import { MatchCard } from '@/components/cards/MatchCard'
+import { useAppSelector } from '@/store'
 
 export default function HomePage() {
-  const [matches, setMatches] = React.useState<any[]>([])
+  const matches = useAppSelector((s) => s.matches.list)
 
   return (
     <div className="space-y-10">
@@ -21,12 +23,18 @@ export default function HomePage() {
       </section>
 
       {/* Startup → Investor matches */}
-<section className="space-y-6">
+      <section className="space-y-6">
         <h2 className="text-lg font-semibold">Startup ➝ Investor Matches</h2>
-        <StartupPitchSection onMatches={setMatches} />
-        <div className="grid gap-4 sm:grid-cols-1">
-          {matches.map((m, i) => <MatchCard key={i} m={m} index={i} />)}
-        </div>
+
+        {/* Analyze/upload section (still shows matches inline) */}
+        <StartupPitchSection />
+
+        {/* Persisted results (grid) */}
+        {matches.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-1">
+            {matches.map((m, i) => <MatchCard key={`${m.name ?? i}-home-${i}`} m={m} index={i} />)}
+          </div>
+        )}
       </section>
     </div>
   )

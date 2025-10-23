@@ -3,17 +3,20 @@ import * as React from 'react'
 import { FileText, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { API } from '@/lib/api/api'
+import { MatchCard } from '@/components/cards/MatchCard'
+import { useAppDispatch, useAppSelector } from '@/store'
+import { setMatches, setLastPitchQuery } from '@/store/matchesSlice'
 
 type Match = Record<string, any>
-type PitchResp = { matches: Match[] }
+type PitchResp = { matches: Match[]; query_text?: string }
 
-export default function StartupPitchSection({
-  onMatches,
-}: { onMatches?: (m: Match[]) => void }) {
+export default function StartupPitchSection() {
   const [file, setFile] = React.useState<File | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [msg, setMsg] = React.useState<string | null>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const dispatch = useAppDispatch()
+  const matches = useAppSelector((s) => s.matches.list)
 
   const openPicker = () => inputRef.current?.click()
 
@@ -24,8 +27,17 @@ export default function StartupPitchSection({
       const fd = new FormData()
       fd.append('file', file)
       const res = await API.recommendPitchFile<PitchResp>(fd)
-      onMatches?.(res.matches || [])
-      setMsg('Uploaded. Showing matches below.')
+
+      // Persist in both sessionStorage (for profile analysis) and Redux (for Home grid)
+      if (res.query_text) {
+        sessionStorage.setItem('lastPitchQuery', res.query_text)
+        dispatch(setLastPitchQuery(res.query_text))
+      }
+
+      const list = res.matches || []
+      dispatch(setMatches(list))
+
+      setMsg(`Found ${list.length} matches. Showing below.`)
     } catch (e) {
       setMsg((e as Error).message)
     } finally {
@@ -97,7 +109,7 @@ export default function StartupPitchSection({
         </div>
       </div>
 
-      {/* Prompt row */}
+      {/* Analyze */}
       <div className="mt-8 flex flex-col sm:flex-row items-stretch gap-3">
         <Button
           onClick={upload}
@@ -110,6 +122,18 @@ export default function StartupPitchSection({
       </div>
 
       {msg && <p className="mt-4 text-center text-sm text-zinc-500">{msg}</p>}
+
+      {/* Render matches directly here too */}
+      {matches.length > 0 && (
+        <div className="mt-8">
+          <div className="text-base font-semibold mb-3">Matches</div>
+          <div className="grid gap-4 sm:grid-cols-1">
+            {matches.map((m, i) => (
+              <MatchCard key={`${m.name ?? i}-${i}`} m={m} index={i} />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }

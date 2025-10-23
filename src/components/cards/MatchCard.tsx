@@ -1,13 +1,14 @@
+// src/components/cards/MatchCard.tsx
 import * as React from 'react'
 import { Card } from '@/components/ui/card'
-import { Pill } from '@/components/ui/Pill'
 import { Progress } from '@/components/ui/Progress'
+import { Link, useLocation } from 'react-router-dom'
 
 type Match = {
   name?: string
   thesis?: string
-  sectors?: string[] | string
-  stages?: string[] | string
+  sectors?: string | string[]
+  stages?: string | string[]
   geo?: string
   region?: string
   checkSize?: string
@@ -19,40 +20,100 @@ type Match = {
 const toList = (v?: string | string[]) =>
   !v ? null : Array.isArray(v) ? v.filter(Boolean).join(', ') : v
 
+function slugify(input: string) {
+  return (input || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')  // non-alnum → dash
+    .replace(/^-+|-+$/g, '')      // trim leading/trailing dashes
+}
+
 export function MatchCard({ m, index }: { m: Match; index: number }) {
-const pct =
-  typeof m.score_pct === 'number' ? Math.round(m.score_pct) :
-  typeof m.score === 'number'     ? Math.round(m.score * 100) :
-  typeof m.distance === 'number'  ? Math.round((1 - Math.min(Math.max(m.distance, 0), 2) / 2) * 100) :
-  0;
+  const location = useLocation()
+
+  const pct = React.useMemo(() => {
+    if (typeof m?.score_pct === 'number' && !Number.isNaN(m.score_pct)) {
+      return Math.max(0, Math.min(100, Math.round(m.score_pct)))
+    }
+    if (typeof m?.score === 'number' && !Number.isNaN(m.score)) {
+      return Math.max(0, Math.min(100, Math.round(m.score * 100)))
+    }
+    if (typeof m?.distance === 'number' && !Number.isNaN(m.distance)) {
+      const d = Math.max(0, Math.min(2, m.distance))
+      return Math.round((1 - d / 2) * 100)
+    }
+    return 0
+  }, [m])
+
+  const title = m.name || `Investor ${index + 1}`
+  const slug = slugify(title)
 
   return (
-    <Card className="p-5">
+    // No onClick on Card — to avoid double navigations / random URL bits
+    <Card className="p-5 hover:shadow-md transition">
+      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-base font-semibold truncate">{m.name || `Investor ${index+1}`}</div>
-          {m.thesis && <p className="text-sm text-ink-400 mt-1 line-clamp-2">{m.thesis}</p>}
+          <div className="flex items-center gap-2">
+            <div className="text-base font-semibold truncate">{title}</div>
+            <span className="text-xs px-2 py-0.5 rounded-full border bg-white">
+              {pct}% match
+            </span>
+          </div>
+          {m.thesis && (
+            <p className="text-sm text-zinc-500 mt-1 line-clamp-2">
+              {m.thesis}
+            </p>
+          )}
         </div>
-        <Pill>{pct}% match</Pill>
       </div>
 
-      <div className="mt-3"><Progress value={pct} /></div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-ink-500">
-        {toList(m.sectors) && <div><span className="font-medium">Sectors:</span> {toList(m.sectors)}</div>}
-        {toList(m.stages)  && <div><span className="font-medium">Stages:</span> {toList(m.stages)}</div>}
-        {(m.region || m.geo) && <div className="col-span-2"><span className="font-medium">Region:</span> {m.region || m.geo}</div>}
-        {m.checkSize && <div className="col-span-2"><span className="font-medium">Check size:</span> {m.checkSize}</div>}
+      {/* Progress */}
+      <div className="mt-3">
+        <Progress value={pct} />
       </div>
 
+      {/* Key details */}
+      <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-zinc-600">
+        {toList(m.sectors) ? (
+          <div><span className="font-medium">Sectors:</span> {toList(m.sectors)}</div>
+        ) : (
+          <div><span className="font-medium">Sectors:</span> —</div>
+        )}
+        {toList(m.stages) ? (
+          <div><span className="font-medium">Stages:</span> {toList(m.stages)}</div>
+        ) : (
+          <div><span className="font-medium">Stages:</span> —</div>
+        )}
+        {(m.region || m.geo) ? (
+          <div className="col-span-2"><span className="font-medium">Region:</span> {m.region || m.geo}</div>
+        ) : (
+          <div className="col-span-2"><span className="font-medium">Region:</span> —</div>
+        )}
+        {m.checkSize ? (
+          <div className="col-span-2"><span className="font-medium">Check size:</span> {m.checkSize}</div>
+        ) : (
+          <div className="col-span-2"><span className="font-medium">Check size:</span> —</div>
+        )}
+      </div>
+
+      {/* Actions */}
       <div className="mt-4 flex items-center gap-3">
-        <button className="rounded-lg px-3 py-2 text-sm font-medium border app-border hover:border-brand-300"
-                onClick={() => alert('Open investor profile')}>
+        {/* Use Link and pass `from` so the profile page can return properly */}
+        <Link
+          to={`/investor/${slug}`}
+          state={{ match: m, from: location.pathname }}
+          className="rounded-lg px-3 py-2 text-sm font-medium border hover:border-indigo-300"
+        >
           View profile
-        </button>
-        <button className="rounded-lg px-3 py-2 text-sm font-medium text-white"
-                style={{ background: 'var(--accent)' }}
-                onClick={() => alert('Shortlisted')}>
+        </Link>
+
+        <button
+          type="button"
+          className="rounded-lg px-3 py-2 text-sm font-medium text-white"
+          style={{ background: 'var(--accent)' }}
+          onClick={() => alert('Shortlisted')}
+        >
           Shortlist
         </button>
       </div>
