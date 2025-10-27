@@ -122,18 +122,6 @@ export default function StartupPitchSection() {
       </div>
 
       {msg && <p className="mt-4 text-center text-sm text-zinc-500">{msg}</p>}
-
-      {/* Render matches directly here too */}
-      {matches.length > 0 && (
-        <div className="mt-8">
-          <div className="text-base font-semibold mb-3">Matches</div>
-          <div className="grid gap-4 sm:grid-cols-1">
-            {matches.map((m, i) => (
-              <MatchCard key={`${m.name ?? i}-${i}`} m={m} index={i} />
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   )
 }
